@@ -49,7 +49,7 @@ download(){
 
 		echo "-----> $EDITION: Extracting $TAR"
 
-		tar -zxvf $TAR -C $CACHE_DIR --no-anchored --strip-components=1 "$EDITION.mmdb"
+		tar xvf $TAR -C $CACHE_DIR --no-anchored --strip-components=1 "$EDITION.mmdb"
 
 		touch $LAST
 	else

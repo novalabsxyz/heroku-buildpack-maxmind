@@ -13,63 +13,45 @@ if [ ! -f "$ENV_DIR/MAXMIND_KEY" ]; then
 fi
 
 MAXMIND_KEY=`cat $ENV_DIR/MAXMIND_KEY`
-MAXMIND_EDITIONS=`cat $ENV_DIR/MAXMIND_EDITIONS`
 
 mkdir -p $CACHE_DIR
 
-download(){
-	EDITION=$1
+EDITION=GeoLite2-Country
 
-	TAR="$CACHE_DIR/$EDITION.tar.gz"
-	DB="$CACHE_DIR/$EDITION.mmdb"
-	LAST="$CACHE_DIR/$EDITION.last"
+TAR="$CACHE_DIR/$EDITION.tar.gz"
+DB="$CACHE_DIR/$EDITION.mmdb"
+LAST="$CACHE_DIR/$EDITION.last"
 
-	if [ -f $DB ]; then
-		if [ -f $LAST ]; then
-			touch -d '-1 week' limit
+if [ -f $DB ]; then
+	if [ -f $LAST ]; then
+		touch -d '-1 week' limit
 
-			if [ limit -nt $LAST ]; then
-				echo "-----> $EDITION: Database is older than a week, clearing cache."
-
-				rm $DB
-			fi
-		else
-			echo "-----> $EDITION: Unable to determine last download time, clearing cache."
-
+		if [ limit -nt $LAST ]; then
+			echo "-----> Database is older than a week, clearing cache."
 			rm $DB
 		fi
-	fi
-
-	if [ ! -f $DB ]; then
-		if [ ! -f $TAR ]; then
-			echo "-----> $EDITION: Database does not exist in cache, downloading."
-
-			curl -o $TAR -L "https://download.maxmind.com/app/geoip_download?edition_id=${EDITION}&suffix=tar.gz&license_key=$MAXMIND_KEY"
-		fi
-
-		echo "-----> $EDITION: Extracting $TAR"
-
-		tar -zxvf $TAR -C $CACHE_DIR --no-anchored --strip-components=1 "$EDITION.mmdb"
-
-		touch $LAST
 	else
-		echo "-----> $EDITION: Database already exists in cache."
+		echo "-----> Unable to determine last download time, clearing cache."
+		rm $DB
+	fi
+fi
+
+if [ ! -f $DB ]; then
+	if [ ! -f $TAR ]; then
+		echo "-----> Database does not exist in cache, downloading."
+		curl -o $TAR -L "https://download.maxmind.com/app/geoip_download?edition_id=${EDITION}&suffix=tar.gz&license_key=${MAXMIND_KEY}"
 	fi
 
-	OUTPUT="$BUILD_DIR/$SAVE"
+	echo "-----> Extracting $TAR"
+	tar -zxvf $TAR -C $CACHE_DIR --no-anchored --strip-components=1 "$EDITION.mmdb"
+	touch $LAST
+else
+	echo "-----> Database already exists in cache."
+fi
 
-	echo "-----> $EDITION: Copying $DB to $OUTPUT"
+echo "-----> Copying $DB to $BUILD_DIR"
+cp $DB $BUILD_DIR
 
-	cp $DB $OUTPUT
-
-	if [ -f $TAR ]; then
-		rm $TAR
-	fi
-}
-
-IFS=', ' read -a editions <<< "$MAXMIND_EDITIONS"
-
-for edition in "${editions[@]}"
-do
-    download "$edition"
-done
+if [ -f $TAR ]; then
+	rm $TAR
+fi

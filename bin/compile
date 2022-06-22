@@ -16,7 +16,7 @@ MAXMIND_KEY=`cat $ENV_DIR/MAXMIND_KEY`
 
 mkdir -p $CACHE_DIR
 
-EDITION=GeoLite2-Country
+EDITION=GeoLite2-City
 
 TAR="$CACHE_DIR/$EDITION.tar.gz"
 DB="$CACHE_DIR/$EDITION.mmdb"
